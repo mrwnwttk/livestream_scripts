@@ -30,6 +30,8 @@ Filename : insomniac - 2020-11-04 06-38-04.ts
 
 Splits a livestream recording into mkv and m4a files given a set of timestamps in the form of a simple text file. There's no transcoding involved, the video and audio streams are always just copied in order for them to not lose any quality.
 
+Requires `python3` and `ffmpeg`.
+
 Here's what one of those text files might look like:
 
 ```
