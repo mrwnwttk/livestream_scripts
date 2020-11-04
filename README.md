@@ -69,7 +69,7 @@ The end result will look a little like this:
 
 Used to upload files to gofile.io. Automatically formats links as markdown for convenience.
 
-Uses the timestamps file that was created by the `split.py` script. You can also skip lines by putting `#` in front the line, same procedure as with `split.py`.
+Uses the timestamps file that was used together with the `split.py` script. You can also skip lines by putting `#` in front the line, same procedure as with `split.py`.
 
 Requires `curl` (which should come pre-installed on Windows/Linux/macOS) and `python3`.
 
