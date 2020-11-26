@@ -84,8 +84,12 @@ def main():
 		print(i)
 		x = [i[0]]
 		video_url = upload(i[1])
+		with open('post.txt', 'a+') as f:
+			f.write(f"{i[0]}: " + "[Video]" + f"({video_url}) | ")
 		x.append(video_url)
 		audio_url = upload(i[2])
+		with open('post.txt', 'a+') as f:
+			f.write(f"[Audio]({audio_url})\n\n")
 		x.append(audio_url)
 		artists_uploads.append(x)
 
