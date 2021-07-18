@@ -64,7 +64,7 @@ def download(link, quality="best"):
                     + " [" + quality + "].ts"
 
     cmd = ["streamlink", "--twitch-disable-hosting", "--twitch-disable-ads",
-            "--hls-live-restart", "-o", f"\"{base_filename}\"",
+            "--hls-live-restart", "-o", base_filename,
             link, quality
         ]
 
