@@ -67,20 +67,20 @@ def download(link, quality="best"):
 
     full_output = ""
     try:
-        process = subprocess.Popen(cmd, stdout=subprocess.PIPE)
-        while True:
-            try:
-                output = process.stdout.readline()
-                if not output:
-                    break
-                if output == '' and process.poll() is not None:
-                    break
-                if output:
-                    print(output.decode(sys.stdout.encoding), end='')
-                    full_output += output.decode(sys.stdout.encoding)
-            except:
-                raise subprocess.CalledProcessError
-            process.returncode = process.poll()
+        process = subprocess.run(cmd, check=True)
+        # while True:
+        #     try:
+        #         output = process.stdout.readline()
+        #         if not output:
+        #             break
+        #         if output == '' and process.poll() is not None:
+        #             break
+        #         if output:
+        #             print(output.decode(sys.stdout.encoding), end='')
+        #             full_output += output.decode(sys.stdout.encoding)
+        #     except:
+        #         raise subprocess.CalledProcessError
+        #     process.returncode = process.poll()
 
         if process.returncode == 0:
             print(f"Saved Streamlink recording with filename: \"{base_filename}\"")
