@@ -53,9 +53,6 @@ for key, value in DEFAULT_TERM_SEQ.items():
 
     TERM_SEQ[key] = get_term_seq(key)
 
-# print(f"Default key sequences: {dict([(key, list(val)) for key, val in DEFAULT_TERM_SEQ.items()])}")
-# print(f"Updated key sequences: {dict([(key, list(val)) for key, val in TERM_SEQ.items()])}")
-
 
 def download(link, quality="best"):
     current_date_time = strftime("%Y-%m-%d %H-%M-%S", gmtime())
@@ -68,28 +65,53 @@ def download(link, quality="best"):
             link, quality
         ]
 
-    # DEBUG simulate streamlink output for testing
-    # cmd = 'echo "[cli][info] Found matching plugin twitch for URL https://www.twitch.tv/matsuromeru" ; sleep 1;'\
-    #     'echo "error: No playable streams found on this URL: https://www.twitch.tv/matsuromeru" ; sleep 1;'\
-    #     'exit 1;'
-
+    full_output = ""
     try:
-        process = subprocess.run(cmd, check=True)  # DEBUG: ,shell=True)
+        process = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+        while True:
+            try:
+                output = process.stdout.readline()
+                if not output:
+                    break
+                if output == '' and process.poll() is not None:
+                    break
+                if output:
+                    print(output.decode(sys.stdout.encoding), end='')
+                    full_output += output.decode(sys.stdout.encoding)
+            except:
+                raise subprocess.CalledProcessError
+            process.returncode = process.poll()
+
         if process.returncode == 0:
             print(f"Saved Streamlink recording with filename: \"{base_filename}\"")
-    except subprocess.CalledProcessError:
-        # print(f"{cmd[0]} exit code: \"{e.returncode}\"")
+        else:
+            raise subprocess.CalledProcessError(process, process.returncode)
 
+    except subprocess.CalledProcessError as e:
         # Overwrite the two last lines with current time to reduce backlog clutter
-        sys.stdout.write(
-            TERM_SEQ['cuu2']
-            + TERM_SEQ['el1']
-            + '\r'
-            + current_date_time
-            + " "
-            + TERM_SEQ['el']
-        )
-        # sys.stdout.flush()
+        if not sys.platform == "win32":
+            sys.stdout.write(
+                TERM_SEQ['cuu2']
+                + TERM_SEQ['el1']
+                + '\r'
+                + current_date_time
+                + " "
+                + TERM_SEQ['el']
+            )
+        else:
+            # We assume that powershell.exe is present on the system
+            # That way controlling the cursor will work in both cmd and powershell
+            term_width = int(subprocess.check_output(["powershell.exe", "$Host.UI.RawUI.WindowSize.Width"]).decode(sys.stdout.encoding).rstrip())
+            current_y = int(subprocess.check_output(["powershell.exe", "[console]::CursorTop"]).decode(sys.stdout.encoding).rstrip())
+
+            if " is hosting " in full_output:
+                ln = 5
+            else:
+                ln = 3
+
+            for y in range(1,ln):
+                subprocess.run(["powershell.exe", f"[console]::setcursorposition(0,{current_y - y})"])
+                print(" " * term_width, end='\r')
 
 
 def main():
@@ -105,7 +127,10 @@ def main():
         else:
             while True:
                 download(sys.argv[2])
-                time.sleep(uniform(MIN_WAIT, MAX_WAIT))
-
+                try:
+                    time.sleep(uniform(MIN_WAIT, MAX_WAIT))
+                except KeyboardInterrupt:
+                    print()
+                    exit()
 if __name__ == '__main__':
     main()
