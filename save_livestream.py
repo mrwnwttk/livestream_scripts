@@ -56,9 +56,6 @@ for key, value in DEFAULT_TERM_SEQ.items():
 
 def download(link, quality="best"):
     current_date_time = strftime("%Y-%m-%d %H-%M-%S", gmtime())
-   # base_filename = current_date_time + " " \
-   #                 + sys.argv[1] \
-   #                 + " [" + quality + "].ts"
     base_filename = r"{time:%Y%m%d-%H-%M-%S} [" + sys.argv[1] + r"] {title} [" + f"{quality}" + r"]_{id}.ts"
     cmd = ["streamlink", "--twitch-disable-hosting", "--twitch-disable-ads",
             "--hls-live-restart", "--stream-segment-timeout", "30", 
