@@ -81,9 +81,7 @@ def download(link, quality="best"):
         #         raise subprocess.CalledProcessError
         #     process.returncode = process.poll()
 
-        if process.returncode == 0:
-            print(f"Saved Streamlink recording with filename: \"{base_filename}\"")
-        else:
+        if process.returncode != 0:
             raise subprocess.CalledProcessError(process, process.returncode)
 
     except subprocess.CalledProcessError as e:
