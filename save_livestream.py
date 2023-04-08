@@ -2,6 +2,7 @@
 import sys
 import time
 import subprocess
+import argparse
 from time import gmtime, strftime
 from random import uniform
 
@@ -54,15 +55,18 @@ for key, value in DEFAULT_TERM_SEQ.items():
     TERM_SEQ[key] = get_term_seq(key)
 
 
-def download(link, quality="best"):
+def download(args, extra=None, quality="best"):
     current_date_time = strftime("%Y-%m-%d %H-%M-%S", gmtime())
-    base_filename = r"{time:%Y%m%d-%H-%M-%S} [" + sys.argv[1] + r"] {title} [" + f"{quality}" + r"]_{id}.ts"
-    cmd = ["streamlink", "--twitch-disable-hosting", "--twitch-disable-ads",
-            "--hls-live-restart", "--stream-segment-timeout", "30", 
-            "--stream-segment-attempts", "10",
-            "-o", base_filename,
-            link, quality
-        ]
+    filename = r"{time:%Y%m%d %H-%M-%S} [" + args.author_name + r"] {title} [" + f"{quality}" + r"][{id}].ts"
+    cmd = [
+        "streamlink", "--twitch-disable-hosting", "--twitch-disable-ads",
+        "--hls-live-restart", "--stream-segment-timeout", "30", 
+        "--stream-segment-attempts", "10"
+    ]
+    if extra:
+        cmd.extend(extra)
+
+    cmd.extend(["-o", filename, args.URI, quality])
 
     full_output = ""
     try:
@@ -111,23 +115,53 @@ def download(link, quality="best"):
                 print(" " * term_width, end='\r')
 
 
-def main():
-    if len(sys.argv) != 3:
-        print(f"Usage: {sys.argv[0]} <base filename> <link to Twitch>\n")
-        print(f"Example for Twitch: {sys.argv[0]} sovietwomble https://www.twitch.tv/sovietwomble/")
-        print(f"Example for Twitch: {sys.argv[0]} sovietwomble https://www.twitch.tv/videos/571088399")
-        exit(1)
+def parse_args():
+    parser = argparse.ArgumentParser(
+            description=(
+                "Monitor a Twitch channel for any active live stream and record them"
+            ),
+            epilog=(
+                "Extra arguments can be passed to streamlink. "
+                "This is useful to pass login token as to avoid mid-roll ads "
+                "which may corrupt the final output due to stream discontinuities. "
+                "Example: \"--twitch-api-header 'Authorization=OAuth <auth-token>'\""
+            )
+        )
+    parser.add_argument(
+        "--author-name", type=str,
+        help="The name of the channel's author for the output filename",
+        required=True
+    )
+    parser.add_argument(
+        "URI", metavar="URI",
+        help="The URI to the channel to monitor OR video to download",
+    )
+    return parser.parse_known_args()
 
-    if "twitch.tv" in sys.argv[2]:
-        if '/videos/' in sys.argv[2]:
-            download(sys.argv[2])
-        else:
-            while True:
-                download(sys.argv[2])
-                try:
-                    time.sleep(uniform(MIN_WAIT, MAX_WAIT))
-                except KeyboardInterrupt:
-                    print()
-                    exit()
+
+def main():
+    args, extra = parse_args()
+
+    # Usage: <author_name> <Twitch_URI
+    # Example for Twitch: script sovietwomble https://www.twitch.tv/sovietwomble/"
+    # Example for Twitch: script sovietwomble https://www.twitch.tv/videos/571088399"
+
+    if "twitch.tv" not in args.URI:
+        print("Not a twitch.tv URI. Aborting.")
+        return 1
+
+    if '/videos/' in args.URI:
+        download(args, extra)
+        return 0
+
+    while True:
+        download(args, extra)
+        try:
+            time.sleep(uniform(MIN_WAIT, MAX_WAIT))
+        except KeyboardInterrupt:
+            print("Interrupt asked by user. Exiting.")
+            return 0
+
+
 if __name__ == '__main__':
-    main()
+    exit(main())
