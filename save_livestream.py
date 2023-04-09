@@ -136,6 +136,8 @@ def parse_args():
                 "This is useful to pass login token as to avoid mid-roll ads "
                 "which may corrupt the final output due to stream discontinuities. "
                 "Example: \"--twitch-api-header 'Authorization=OAuth <auth-token>'\""
+                " although this should ideally be set in your .streamlinkrc but "
+                " will apply to ALL invocations of streamlink in that case."
             )
     )
     parser.add_argument(
