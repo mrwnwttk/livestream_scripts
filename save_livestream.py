@@ -3,6 +3,7 @@ import sys
 import time
 import subprocess
 import argparse
+from shlex import shlex
 from time import gmtime, strftime
 from random import uniform
 
@@ -60,13 +61,14 @@ def download(args, extra=None, quality="best"):
     filename = r"{time:%Y%m%d %H-%M-%S} [" + args.author_name + r"] {title} [" + f"{quality}" + r"][{id}].ts"
     cmd = [
         "streamlink", "--twitch-disable-hosting", "--twitch-disable-ads",
-        "--hls-live-restart", "--stream-segment-timeout", "30", 
-        "--stream-segment-attempts", "10"
+        "--hls-live-restart", "--stream-segment-timeout", "30",
+        "--stream-segment-attempts", "10", "-o", filename
     ]
+
     if extra:
         cmd.extend(extra)
 
-    cmd.extend(["-o", filename, args.URI, quality])
+    cmd.extend([args.URI, quality])
 
     full_output = ""
     try:
@@ -136,15 +138,22 @@ def parse_args():
         "URI", metavar="URI",
         help="The URI to the channel to monitor OR video to download",
     )
-    return parser.parse_known_args()
+    args, extra = parser.parse_known_args()
+
+    # Pre-parse and sanitize extra positional arguments to pass to downloader
+    if extra:
+        pextras = []
+        for extra_arg in extra:
+            pextra = shlex(extra_arg)
+            pextra.whitespace_split = True
+            for _arg in list(pextra):
+                pextras.append(_arg.strip("'"))
+
+    return args, pextras
 
 
 def main():
     args, extra = parse_args()
-
-    # Usage: <author_name> <Twitch_URI
-    # Example for Twitch: script sovietwomble https://www.twitch.tv/sovietwomble/"
-    # Example for Twitch: script sovietwomble https://www.twitch.tv/videos/571088399"
 
     if "twitch.tv" not in args.URI:
         print("Not a twitch.tv URI. Aborting.")
@@ -164,4 +173,7 @@ def main():
 
 
 if __name__ == '__main__':
+    # Usage: <author_name> <Twitch_URI
+    # Example for Twitch: script sovietwomble https://www.twitch.tv/sovietwomble/"
+    # Example for Twitch: script sovietwomble https://www.twitch.tv/videos/571088399"
     exit(main())
