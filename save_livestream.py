@@ -122,12 +122,7 @@ def parse_args():
             description=(
                 "Monitor a Twitch channel for any active live stream and record them"
             ),
-            epilog=(
-                "Extra arguments can be passed to streamlink. "
-                "This is useful to pass login token as to avoid mid-roll ads "
-                "which may corrupt the final output due to stream discontinuities. "
-                "Example: \"--twitch-api-header 'Authorization=OAuth <auth-token>'\""
-            )
+            epilog="Any extra positional argument will also be passed to the downloader."
         )
     parser.add_argument(
         "--author-name", type=str,
@@ -135,19 +130,37 @@ def parse_args():
         required=True
     )
     parser.add_argument(
+        "--downloader-args", action="append", type=str,
+        help=(
+                "Extra arguments can be passed to streamlink. "
+                "This is useful to pass login token as to avoid mid-roll ads "
+                "which may corrupt the final output due to stream discontinuities. "
+                "Example: \"--twitch-api-header 'Authorization=OAuth <auth-token>'\""
+            )
+    )
+    parser.add_argument(
         "URI", metavar="URI",
         help="The URI to the channel to monitor OR video to download",
     )
-    args, extra = parser.parse_known_args()
+
+    args, unknown = parser.parse_known_args()
 
     # Pre-parse and sanitize extra positional arguments to pass to downloader
-    if extra:
-        pextras = []
-        for extra_arg in extra:
+    pextras = []
+
+    def parse(arg_list):
+        for extra_arg in arg_list:
             pextra = shlex(extra_arg)
             pextra.whitespace_split = True
             for _arg in list(pextra):
                 pextras.append(_arg.strip("'"))
+
+    if args.downloader_args:
+        parse(args.downloader_args)
+
+    # This is now a bit redundant with "--downloader-args"
+    if unknown:
+        parse(unknown)
 
     return args, pextras
 
