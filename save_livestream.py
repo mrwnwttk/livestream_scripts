@@ -56,12 +56,11 @@ for key, value in DEFAULT_TERM_SEQ.items():
 
 def download(link, quality="best"):
     current_date_time = strftime("%Y-%m-%d %H-%M-%S", gmtime())
-    base_filename = current_date_time + " " \
-                    + sys.argv[1] \
-                    + " [" + quality + "].ts"
-
+    base_filename = r"{time:%Y%m%d-%H-%M-%S} [" + sys.argv[1] + r"] {title} [" + f"{quality}" + r"]_{id}.ts"
     cmd = ["streamlink", "--twitch-disable-hosting", "--twitch-disable-ads",
-            "--hls-live-restart", "-o", base_filename,
+            "--hls-live-restart", "--stream-segment-timeout", "30", 
+            "--stream-segment-attempts", "10",
+            "-o", base_filename,
             link, quality
         ]
 
@@ -82,9 +81,7 @@ def download(link, quality="best"):
         #         raise subprocess.CalledProcessError
         #     process.returncode = process.poll()
 
-        if process.returncode == 0:
-            print(f"Saved Streamlink recording with filename: \"{base_filename}\"")
-        else:
+        if process.returncode != 0:
             raise subprocess.CalledProcessError(process, process.returncode)
 
     except subprocess.CalledProcessError as e:
