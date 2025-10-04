@@ -60,7 +60,7 @@ def download(args, extra=None, quality="best"):
     current_date_time = strftime("%Y-%m-%d %H-%M-%S", gmtime())
     filename = r"{time:%Y%m%d %H-%M-%S} [" + args.author_name + r"] {title} [" + f"{quality}" + r"][{id}].ts"
     cmd = [
-        "streamlink", "--twitch-disable-hosting", "--twitch-disable-ads",
+        "streamlink", "--twitch-disable-hosting",
         "--hls-live-restart", "--stream-segment-timeout", "30",
         "--stream-segment-attempts", "10", "-o", filename
     ]
